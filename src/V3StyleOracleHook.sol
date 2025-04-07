@@ -84,7 +84,7 @@ contract V3StyleOracleHook is BaseHook {
     }
 
     /// @inheritdoc BaseHook
-    function getHookPermissions() public pure override returns (Hooks.Permissions memory) {
+    function getHookPermissions() public pure virtual override returns (Hooks.Permissions memory) {
         return
             Hooks.Permissions({
                 beforeInitialize: false,
@@ -147,7 +147,7 @@ contract V3StyleOracleHook is BaseHook {
         PoolKey calldata key,
         IPoolManager.SwapParams calldata,
         bytes calldata
-    ) internal override onlyByManager returns (bytes4, BeforeSwapDelta, uint24) {
+    ) internal virtual override onlyByManager returns (bytes4, BeforeSwapDelta, uint24) {
         PoolId poolId = key.toId();
 
         ObservationState memory _observationState = stateById[poolId];
