@@ -289,6 +289,11 @@ contract OracleLibTest is Test {
         oracle = new OracleTestV4(manager);
     }
 
+    function test_fail_increaseObservationCardinalityNext_notInitialized() public {
+        vm.expectRevert(abi.encodeWithSelector(IPoolManager.PoolNotInitialized.selector));
+        oracleBase.increaseObservationCardinalityNext(1, PoolId.wrap(bytes32("1")));
+    }
+
     function test_initialize_indexIsZero() public {
         oracle.initialize(OracleTestV4.InitializeParams({time: 1, tick: 1}));
         assertEq(oracle.index(), 0);

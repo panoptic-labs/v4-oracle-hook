@@ -3,7 +3,6 @@ pragma solidity ^0.8.19;
 
 import {PoolId} from "v4-core/types/PoolId.sol";
 import {V3StyleOracleHook} from "..//V3StyleOracleHook.sol";
-import {Oracle} from "../libraries/Oracle.sol";
 import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
 
@@ -23,6 +22,7 @@ contract V3TruncatedOracleAdapter {
     PoolId public immutable poolId;
 
     /// @notice Initializes the adapter with the V3StyleOracleHook contract and pool ID.
+    /// @param _manager The canonical Uniswap V4 pool manager
     /// @param _v3StyleOracle The V3StyleOracleHook contract
     /// @param _poolId The pool ID of the underlying V4 pool
     constructor(IPoolManager _manager, V3StyleOracleHook _v3StyleOracle, PoolId _poolId) {
