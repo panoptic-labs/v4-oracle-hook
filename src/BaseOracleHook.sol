@@ -9,11 +9,9 @@ import {BaseHook} from "v4-periphery/utils/BaseHook.sol";
 import {PoolKey} from "v4-core/types/PoolKey.sol";
 import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/types/BeforeSwapDelta.sol";
-import {V3OracleAdapter} from "./adapters/V3OracleAdapter.sol";
-import {V3TruncatedOracleAdapter} from "./adapters/V3TruncatedOracleAdapter.sol";
 
-/// @notice A hook for a pool that allows a Uniswap V4 pool to expose a V3-compatible oracle interface
-contract V3StyleOracleHook is BaseHook {
+/// @notice A hook that enables a Uniswap V4 pool to record price observations and expose an oracle interface
+contract BaseOracleHook is BaseHook {
     using Oracle for Oracle.Observation[65535];
     using StateLibrary for IPoolManager;
 
@@ -31,16 +29,6 @@ contract V3StyleOracleHook is BaseHook {
         uint16 observationCardinalityNextNew
     );
 
-    /// @notice Emitted when adapter contracts are deployed for a pool
-    /// @param poolId The ID of the pool
-    /// @param standardAdapter The address of the standard V3 oracle adapter
-    /// @param truncatedAdapter The address of the truncated V3 oracle adapter
-    event OracleInitialized(
-        PoolId indexed poolId,
-        address standardAdapter,
-        address truncatedAdapter
-    );
-
     /// @notice Contains information about the current number of observations stored.
     /// @param index The most-recently updated index of the observations buffer
     /// @param cardinality The current maximum number of observations that are being stored
@@ -51,7 +39,7 @@ contract V3StyleOracleHook is BaseHook {
         uint16 cardinalityNext;
     }
 
-    /// @notice The maximum absolute tick delta that can be observed for the truncated oracle.
+    /// @notice The maximum absolute tick delta that can be observed for the truncated oracle
     int24 public immutable MAX_ABS_TICK_DELTA;
 
     /// @notice The list of observations for a given pool ID
@@ -59,12 +47,6 @@ contract V3StyleOracleHook is BaseHook {
 
     /// @notice The current observation array state for the given pool ID
     mapping(PoolId => ObservationState) public stateById;
-
-    /// @notice Maps pool IDs to their standard V3 oracle adapters
-    mapping(PoolId => address) public standardAdapter;
-
-    /// @notice Maps pool IDs to their truncated V3 oracle adapters
-    mapping(PoolId => address) public truncatedAdapter;
 
     /// @notice Initializes a Uniswap V4 pool with this hook, stores baseline observation state, and optionally performs a cardinality increase.
     /// @param _manager The canonical Uniswap V4 pool manager
@@ -115,25 +97,11 @@ contract V3StyleOracleHook is BaseHook {
             cardinalityNext: cardinalityNext
         });
 
-        // Deploy adapter contracts
-        V3OracleAdapter _standardAdapter = new V3OracleAdapter(poolManager, this, poolId);
-        V3TruncatedOracleAdapter _truncatedAdapter = new V3TruncatedOracleAdapter(
-            poolManager,
-            this,
-            poolId
-        );
-
-        // Store adapter addresses
-        standardAdapter[poolId] = address(_standardAdapter);
-        truncatedAdapter[poolId] = address(_truncatedAdapter);
-
-        // Emit event for adapter deployment
-        emit OracleInitialized(poolId, address(_standardAdapter), address(_truncatedAdapter));
-
         return this.afterInitialize.selector;
     }
 
-    /// @notice The hook called before a swap
+    /// @notice The hook called before a swap.
+    /// @dev Note that this hook does not return either a `BeforeSwapDelta` or lp fee override — this call is used exclusively for recording price observations.
     /// @param key The key for the pool
     /// @return bytes4 The function selector for the hook
     /// @return BeforeSwapDelta The hook's delta in specified and unspecified currencies. Positive: the hook is owed/took currency, negative: the hook owes/sent currency
