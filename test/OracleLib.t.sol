@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import {V3StyleOracleHook} from "../src/V3StyleOracleHook.sol";
+import {OracleHookWithV3Adapters} from "../src/OracleHookWithV3Adapters.sol";
 import {V3OracleAdapter} from "../src/adapters/V3OracleAdapter.sol";
 import {V3TruncatedOracleAdapter} from "../src/adapters/V3TruncatedOracleAdapter.sol";
 import {PoolManager} from "v4-core/PoolManager.sol";
@@ -19,8 +19,8 @@ import {Hooks} from "v4-core/libraries/Hooks.sol";
 contract OracleTestV4 is Test {
     IPoolManager public immutable manager;
 
-    V3StyleOracleHook public constant oracleBase =
-        V3StyleOracleHook(address(uint160(Hooks.BEFORE_SWAP_FLAG | Hooks.AFTER_INITIALIZE_FLAG)));
+    OracleHookWithV3Adapters public constant oracleBase =
+        OracleHookWithV3Adapters(address(uint160(Hooks.BEFORE_SWAP_FLAG | Hooks.AFTER_INITIALIZE_FLAG)));
 
     V3OracleAdapter public oracleAdapter;
 
@@ -275,18 +275,23 @@ contract OracleLibTest is Test {
     PoolManager public manager;
     uint256 constant TEST_POOL_START_TIME = 1601906400;
     uint128 constant MAX_UINT128 = type(uint128).max;
-    V3StyleOracleHook public constant oracleBase =
-        V3StyleOracleHook(address(uint160(Hooks.BEFORE_SWAP_FLAG | Hooks.AFTER_INITIALIZE_FLAG)));
+    OracleHookWithV3Adapters public constant oracleBase =
+        OracleHookWithV3Adapters(address(uint160(Hooks.BEFORE_SWAP_FLAG | Hooks.AFTER_INITIALIZE_FLAG)));
 
     function setUp() public {
         manager = new PoolManager(address(this));
         deployCodeTo(
-            "V3StyleOracleHook.sol",
+            "OracleHookWithV3Adapters.sol",
             abi.encode(manager, int24(9116)),
             address(oracleBase)
         );
 
         oracle = new OracleTestV4(manager);
+    }
+
+    function test_fail_increaseObservationCardinalityNext_notInitialized() public {
+        vm.expectRevert(abi.encodeWithSelector(IPoolManager.PoolNotInitialized.selector));
+        oracleBase.increaseObservationCardinalityNext(1, PoolId.wrap(bytes32("1")));
     }
 
     function test_initialize_indexIsZero() public {
@@ -2066,7 +2071,7 @@ contract OracleLibTest is Test {
         // Initialize manager and oracle
         manager = new PoolManager(address(this));
         deployCodeTo(
-            "V3StyleOracleHook.sol",
+            "OracleHookWithV3Adapters.sol",
             abi.encode(manager, int24(9116)),
             address(oracleBase)
         );

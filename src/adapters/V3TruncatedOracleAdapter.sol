@@ -2,19 +2,18 @@
 pragma solidity ^0.8.19;
 
 import {PoolId} from "v4-core/types/PoolId.sol";
-import {V3StyleOracleHook} from "..//V3StyleOracleHook.sol";
-import {Oracle} from "../libraries/Oracle.sol";
+import {BaseOracleHook} from "../BaseOracleHook.sol";
 import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
 
 /// @title V3TruncatedOracleAdapter
-/// @notice Adapter contract that provides a Uniswap V3-compatible oracle interface for V3StyleOracleHook.
-/// @dev This adapter exposes the truncated tickCumulative values from V3StyleOracleHook.
+/// @notice Adapter contract that provides a Uniswap V3-compatible oracle interface for BaseOracleHook.
+/// @dev This adapter exposes the truncated tickCumulative values from BaseOracleHook.
 contract V3TruncatedOracleAdapter {
     using StateLibrary for IPoolManager;
 
-    /// @notice The V3StyleOracleHook contract this adapter interacts with.
-    V3StyleOracleHook public immutable v3StyleOracle;
+    /// @notice The BaseOracleHook contract this adapter interacts with.
+    BaseOracleHook public immutable baseOracleHook;
 
     /// @notice The canonical Uniswap V4 pool manager.
     IPoolManager public immutable manager;
@@ -22,12 +21,13 @@ contract V3TruncatedOracleAdapter {
     /// @notice The pool ID of the underlying V4 pool.
     PoolId public immutable poolId;
 
-    /// @notice Initializes the adapter with the V3StyleOracleHook contract and pool ID.
-    /// @param _v3StyleOracle The V3StyleOracleHook contract
+    /// @notice Initializes the adapter with the BaseOracleHook contract and pool ID.
+    /// @param _manager The canonical Uniswap V4 pool manager
+    /// @param _baseOracleHook The BaseOracleHook contract
     /// @param _poolId The pool ID of the underlying V4 pool
-    constructor(IPoolManager _manager, V3StyleOracleHook _v3StyleOracle, PoolId _poolId) {
+    constructor(IPoolManager _manager, BaseOracleHook _baseOracleHook, PoolId _poolId) {
         manager = _manager;
-        v3StyleOracle = _v3StyleOracle;
+        baseOracleHook = _baseOracleHook;
         poolId = _poolId;
     }
 
@@ -54,7 +54,7 @@ contract V3TruncatedOracleAdapter {
     {
         (sqrtPriceX96, tick, , ) = manager.getSlot0(poolId);
 
-        (observationIndex, observationCardinality, observationCardinalityNext) = v3StyleOracle
+        (observationIndex, observationCardinality, observationCardinalityNext) = baseOracleHook
             .stateById(poolId);
 
         feeProtocol = 0;
@@ -79,7 +79,7 @@ contract V3TruncatedOracleAdapter {
             bool initialized
         )
     {
-        (blockTimestamp, , , tickCumulativeTruncated, initialized) = v3StyleOracle.observationsById(
+        (blockTimestamp, , , tickCumulativeTruncated, initialized) = baseOracleHook.observationsById(
             poolId,
             uint16(index)
         );
@@ -101,7 +101,7 @@ contract V3TruncatedOracleAdapter {
             uint160[] memory secondsPerLiquidityCumulativeX128s
         )
     {
-        (, tickCumulativesTruncated) = v3StyleOracle.observe(secondsAgos, poolId);
+        (, tickCumulativesTruncated) = baseOracleHook.observe(secondsAgos, poolId);
 
         secondsPerLiquidityCumulativeX128s = new uint160[](secondsAgos.length);
     }
@@ -109,6 +109,6 @@ contract V3TruncatedOracleAdapter {
     /// @notice Increase the maximum number of price observations that this oracle will store.
     /// @param observationCardinalityNext The desired minimum number of observations for the oracle to store
     function increaseObservationCardinalityNext(uint16 observationCardinalityNext) external {
-        v3StyleOracle.increaseObservationCardinalityNext(observationCardinalityNext, poolId);
+        baseOracleHook.increaseObservationCardinalityNext(observationCardinalityNext, poolId);
     }
 }
