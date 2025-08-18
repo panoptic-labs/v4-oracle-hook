@@ -3,3 +3,23 @@ src = "src"
 out = "out"
 libs = ["lib"]
 gas_limit = 9223372036854775807
+remappings = [
+    "@pythnetwork/pyth-sdk-solidity/=lib/pyth-sdk-solidity/",
+    "@uniswap/v3-core/=lib/v3-core/",
+    "v3-core/=lib/v3-core/contracts/",
+    "v4-core/=lib/v4-core/src",
+    "v4-core-for-periphery/=lib/v4-periphery/lib/v4-core/src",
+    "v4-periphery/=lib/v4-periphery/src",
+    "solady/=lib/panoptic-v1-core/lib/solady/src/",
+    "solady-utils=lib/panoptic-v1-core/lib/solady/",
+    "@panoptic-oracle-hook/=lib/v4-oracle-hook/src/",
+    "@panoptic-v1-core/=lib/panoptic-v1-core/contracts/",
+    "@contracts/=lib/panoptic-v1-core/contracts/",
+    "@interfaces/=lib/panoptic-v1-core/contracts/interfaces/",
+    "@libraries/=lib/panoptic-v1-core/contracts/libraries/",
+    "@types/=lib/panoptic-v1-core/contracts/types/",
+    "@base/=lib/panoptic-v1-core/contracts/base/",
+]
+
+[rpc_endpoints]
+unichain = "https://unichain-mainnet.g.alchemy.com/v2/VN5K96b647acOyIXfX45zBdO53Dx7ZKm"
